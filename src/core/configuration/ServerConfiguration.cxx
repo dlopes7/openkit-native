@@ -28,19 +28,23 @@ ServerConfiguration::ServerConfiguration(Builder& builder)
 	, mServerId(builder.getServerId())
 	, mBeaconSizeInBytes(builder.getBeaconSizeInBytes())
 	, mMultiplicity(builder.getMultiplicity())
+	, mMaxSessionDurationInMilliseconds(builder.getMaxSessionDurationInMilliseconds())
+	, mMaxEventsPerSession(builder.getMaxEventsPerSession())
+	, mSessionTimeoutInMilliseconds(builder.getSessionTimeoutInMilliseconds())
+	, mVisitStoreVersion(builder.getVisitStoreVersion())
 {
 }
 
 std::shared_ptr<core::configuration::IServerConfiguration> ServerConfiguration::from(
-	std::shared_ptr<protocol::IStatusResponse> statusResponse
+	std::shared_ptr<protocol::IResponseAttributes> responseAttributes
 )
 {
-	if (statusResponse == nullptr)
+	if (responseAttributes == nullptr)
 	{
 		return nullptr;
 	}
 
-	ServerConfiguration::Builder builder(statusResponse);
+	ServerConfiguration::Builder builder(responseAttributes);
 	return builder.build();
 }
 
@@ -79,6 +83,26 @@ int32_t ServerConfiguration::getMultiplicity() const
 	return mMultiplicity;
 }
 
+int32_t ServerConfiguration::getMaxSessionDurationInMilliseconds() const
+{
+	return mMaxSessionDurationInMilliseconds;
+}
+
+int32_t ServerConfiguration::getMaxEventsPerSession() const
+{
+	return mMaxEventsPerSession;
+}
+
+int32_t ServerConfiguration::getSessionTimeoutInMilliseconds() const
+{
+	return mSessionTimeoutInMilliseconds;
+}
+
+int32_t ServerConfiguration::getVisitStoreVersion() const
+{
+	return mVisitStoreVersion;
+}
+
 bool ServerConfiguration::isSendingDataAllowed() const
 {
 	return isCaptureEnabled() && getMultiplicity() > 0;
@@ -111,68 +135,80 @@ std::shared_ptr<core::configuration::IServerConfiguration> ServerConfiguration::
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ServerConfiguration::Builder::Builder()
-	: mCaptureState(ServerConfiguration::DEFAULT_CAPTURE_ENABLED)
-	, mCrashReportingState(ServerConfiguration::DEFAULT_CRASH_REPORTING_ENABLED)
-	, mErrorReportingState(ServerConfiguration::DEFAULT_ERROR_REPORTING_ENABLED)
+	: mIsCaptureEnabled(ServerConfiguration::DEFAULT_CAPTURE_ENABLED)
+	, mIsCrashReportingEnabled(ServerConfiguration::DEFAULT_CRASH_REPORTING_ENABLED)
+	, mIsErrorReportingEnabled(ServerConfiguration::DEFAULT_ERROR_REPORTING_ENABLED)
 	, mSendIntervalInMilliseconds(ServerConfiguration::DEFAULT_SEND_INTERVAL)
 	, mServerId(ServerConfiguration::DEFAULT_SERVER_ID)
 	, mBeaconSizeInBytes(ServerConfiguration::DEFAULT_BEACON_SIZE)
 	, mMultiplicity(ServerConfiguration::DEFAULT_MULTIPLICITY)
+	, mMaxSessionDurationInMilliseconds(ServerConfiguration::DEFAULT_MAX_SESSION_DURATION)
+	, mMaxEventsPerSession(ServerConfiguration::DEFAULT_MAX_EVENTS_PER_SESSION)
+	, mSessionIdleTimeout(ServerConfiguration::DEFAULT_SESSION_TIMEOUT)
+	, mVisitStoreVersion(ServerConfiguration::DEFAULT_VISIT_STORE_VERSION)
 {
 }
 
-ServerConfiguration::Builder::Builder(std::shared_ptr<protocol::IStatusResponse> statusResponse)
-	: mCaptureState(statusResponse->isCapture())
-	, mCrashReportingState(statusResponse->isCaptureCrashes())
-	, mErrorReportingState(statusResponse->isCaptureErrors())
-	, mSendIntervalInMilliseconds(statusResponse->getSendInterval())
-	, mServerId(statusResponse->getServerID())
-	, mBeaconSizeInBytes(statusResponse->getMaxBeaconSize())
-	, mMultiplicity(statusResponse->getMultiplicity())
+ServerConfiguration::Builder::Builder(std::shared_ptr<protocol::IResponseAttributes> responseAttributes)
+	: mIsCaptureEnabled(responseAttributes->isCapture())
+	, mIsCrashReportingEnabled(responseAttributes->isCaptureCrashes())
+	, mIsErrorReportingEnabled(responseAttributes->isCaptureErrors())
+	, mSendIntervalInMilliseconds(responseAttributes->getSendIntervalInMilliseconds())
+	, mServerId(responseAttributes->getServerId())
+	, mBeaconSizeInBytes(responseAttributes->getMaxBeaconSizeInBytes())
+	, mMultiplicity(responseAttributes->getMultiplicity())
+	, mMaxSessionDurationInMilliseconds(responseAttributes->getMaxSessionDurationInMilliseconds())
+	, mMaxEventsPerSession(responseAttributes->getMaxEventsPerSession())
+	, mSessionIdleTimeout(responseAttributes->getSessionTimeoutInMilliseconds())
+	, mVisitStoreVersion(responseAttributes->getVisitStoreVersion())
 {
 }
 
 ServerConfiguration::Builder::Builder(std::shared_ptr<core::configuration::IServerConfiguration> serverConfiguration)
-	: mCaptureState(serverConfiguration->isCaptureEnabled())
-	, mCrashReportingState(serverConfiguration->isCrashReportingEnabled())
-	, mErrorReportingState(serverConfiguration->isErrorReportingEnabled())
+	: mIsCaptureEnabled(serverConfiguration->isCaptureEnabled())
+	, mIsCrashReportingEnabled(serverConfiguration->isCrashReportingEnabled())
+	, mIsErrorReportingEnabled(serverConfiguration->isErrorReportingEnabled())
 	, mSendIntervalInMilliseconds(serverConfiguration->getSendIntervalInMilliseconds())
 	, mServerId(serverConfiguration->getServerId())
 	, mBeaconSizeInBytes(serverConfiguration->getBeaconSizeInBytes())
 	, mMultiplicity(serverConfiguration->getMultiplicity())
+	, mMaxSessionDurationInMilliseconds(serverConfiguration->getMaxSessionDurationInMilliseconds())
+	, mMaxEventsPerSession(serverConfiguration->getMaxEventsPerSession())
+	, mSessionIdleTimeout(serverConfiguration->getSessionTimeoutInMilliseconds())
+	, mVisitStoreVersion(serverConfiguration->getVisitStoreVersion())
 {
 }
 
 bool ServerConfiguration::Builder::isCaptureEnabled() const
 {
-	return mCaptureState;
+	return mIsCaptureEnabled;
 }
 
 ServerConfiguration::Builder& ServerConfiguration::Builder::withCapture(bool capture)
 {
-	mCaptureState = capture;
+	mIsCaptureEnabled = capture;
 	return *this;
 }
 
 bool ServerConfiguration::Builder::isCrashReportingEnabled() const
 {
-	return mCrashReportingState;
+	return mIsCrashReportingEnabled;
 }
 
 ServerConfiguration::Builder& ServerConfiguration::Builder::withCrashReporting(bool crashReportingState)
 {
-	mCrashReportingState = crashReportingState;
+	mIsCrashReportingEnabled = crashReportingState;
 	return *this;
 }
 
 bool ServerConfiguration::Builder::isErrorReportingEnabled() const
 {
-	return mErrorReportingState;
+	return mIsErrorReportingEnabled;
 }
 
 ServerConfiguration::Builder& ServerConfiguration::Builder::withErrorReporting(bool errorReportingState)
 {
-	mErrorReportingState = errorReportingState;
+	mIsErrorReportingEnabled = errorReportingState;
 	return *this;
 }
 
@@ -219,6 +255,52 @@ int32_t ServerConfiguration::Builder::getMultiplicity() const
 ServerConfiguration::Builder& ServerConfiguration::Builder::withMultiplicity(int32_t multiplicity)
 {
 	mMultiplicity = multiplicity;
+	return *this;
+}
+
+int32_t ServerConfiguration::Builder::getMaxSessionDurationInMilliseconds() const
+{
+	return mMaxSessionDurationInMilliseconds;
+}
+
+ServerConfiguration::Builder& ServerConfiguration::Builder::withMaxSessionDurationInMilliseconds(
+		int32_t maxSessionDurationInMilliseconds)
+{
+	mMaxSessionDurationInMilliseconds = maxSessionDurationInMilliseconds;
+	return *this;
+}
+
+int32_t ServerConfiguration::Builder::getMaxEventsPerSession() const
+{
+	return mMaxEventsPerSession;
+}
+
+ServerConfiguration::Builder& ServerConfiguration::Builder::withMaxEventsPerSession(int maxEventsPerSession)
+{
+	mMaxEventsPerSession = maxEventsPerSession;
+	return *this;
+}
+
+int32_t ServerConfiguration::Builder::getSessionTimeoutInMilliseconds() const
+{
+	return mSessionIdleTimeout;
+}
+
+ServerConfiguration::Builder& ServerConfiguration::Builder::withSessionTimeoutInMilliseconds(
+		int32_t sessionTimeoutInMilliseconds)
+{
+	mSessionIdleTimeout = sessionTimeoutInMilliseconds;
+	return *this;
+}
+
+int32_t ServerConfiguration::Builder::getVisitStoreVersion() const
+{
+	return mVisitStoreVersion;
+}
+
+ServerConfiguration::Builder& ServerConfiguration::Builder::withVisitStoreVersion(int32_t visitStoreVersion)
+{
+	mVisitStoreVersion = visitStoreVersion;
 	return *this;
 }
 

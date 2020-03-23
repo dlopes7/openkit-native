@@ -21,6 +21,7 @@
 #include "core/objects/SessionInternals.h"
 #include "protocol/IHTTPClient.h"
 #include "protocol/IStatusResponse.h"
+#include "protocol/IResponseAttributes.h"
 #include "providers/IHTTPClientProvider.h"
 
 #include <cstdint>
@@ -180,6 +181,22 @@ namespace core
 			virtual void handleStatusResponse(std::shared_ptr<protocol::IStatusResponse> response) = 0;
 
 			///
+			/// Updates the last known response attributes of this context from the given status response if the given IStatusResponse
+			/// is successful @see BeaconSendingResponseUtil::isSuccessfulResponse(std::shared_ptr<protocol::IStatusResponse>).
+			///
+			/// @param statusResponse the status response from which to update the last response attributes.
+			///
+			/// @return in case the given IStatusResponse was successful the updated response attributes are returned. Otherwise
+			/// the current response attributes are returned.
+			///
+			virtual std::shared_ptr<protocol::IResponseAttributes> updateLastResponseAttributesFrom(std::shared_ptr<protocol::IStatusResponse> statusResponse) = 0;
+
+			///
+			/// Returns the last attributes received as response from the server.
+			///
+			virtual std::shared_ptr<protocol::IResponseAttributes> getLastResponseAttributes() const = 0;
+
+			///
 			/// Get all sessions that were not yet configured.
 			///
 			/// @par
@@ -208,7 +225,7 @@ namespace core
 			///
 			/// Returns the number of sessions currently known to this context
 			///
-			virtual int32_t getSessionCount() = 0;
+			virtual size_t getSessionCount() = 0;
 
 			///
 			/// Returns the current server ID to be used for creating new sessions.
